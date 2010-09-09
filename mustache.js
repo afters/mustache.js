@@ -34,6 +34,7 @@ var Mustache = function() {
         }
       }
 
+      template = this.remove_comments(template);
       template = this.render_pragmas(template);
       var html = this.render_section(template, context, partials);
       if(in_recursion) {
@@ -50,6 +51,15 @@ var Mustache = function() {
       if(line != "") {
         this.buffer.push(line);
       }
+    },
+
+    /*
+      Removes comments from template
+    */
+    remove_comments: function(template) {
+      return template.replace(
+        new RegExp(this.otag + '![\\s\\S]*?' + this.ctag, "mg"), ''
+      );
     },
 
     /*
@@ -149,15 +159,13 @@ var Mustache = function() {
       var that = this;
 
       var new_regex = function() {
-        return new RegExp(that.otag + "(=|!|>|\\{|%)?([^\\/#\\^]+?)\\1?" +
+        return new RegExp(that.otag + "(=|>|\\{|%)?([^\\/#\\^]+?)\\1?" +
           that.ctag + "+", "g");
       };
 
       var regex = new_regex();
       var tag_replace_callback = function(match, operator, name) {
         switch(operator) {
-        case "!": // ignore comments
-          return "";
         case "=": // set new delimiters, rebuild the replace regexp
           that.set_delimiters(name);
           regex = new_regex();
